@@ -25,8 +25,8 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const url = user?.role === 'admin' 
-        ? 'http://localhost:5000/api/admin/complaints'
-        : 'http://localhost:5000/api/complaints/me';
+        ? `${import.meta.env.VITE_API_URL}/api/admin/complaints`
+        : `${import.meta.env.VITE_API_URL}/api/complaints/me`;
       
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
@@ -54,7 +54,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
   const addComplaint = async (complaintData: Omit<Complaint, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => {
     if (!token) return;
     try {
-      const response = await axios.post('http://localhost:5000/api/complaints', complaintData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/complaints`, complaintData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const newComplaint = {
@@ -78,7 +78,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
   ) => {
     if (!token) return;
     try {
-      const response = await axios.put(`http://localhost:5000/api/admin/complaints/${id}`, {
+      const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/complaints/${id}`, {
         status,
         solutionImageUrl,
         resolutionNote

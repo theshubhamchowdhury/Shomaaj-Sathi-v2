@@ -72,7 +72,7 @@ export default function AdminDashboard() {
       const formData = new FormData();
       formData.append('image', file);
       
-      const response = await axios.post('http://localhost:5000/api/upload', formData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/upload`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -91,7 +91,7 @@ export default function AdminDashboard() {
   const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/admin/users', {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUnverifiedUsers(response.data);
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
 
   const verifyUser = async (userId: string) => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/verify-user/${userId}`, {}, {
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/verify-user/${userId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchUsers();

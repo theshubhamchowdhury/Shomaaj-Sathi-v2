@@ -25,7 +25,7 @@ export function ImageUpload({ value, onChange, token }: ImageUploadProps) {
         const formData = new FormData();
         formData.append('image', file);
         
-        const response = await axios.post('http://localhost:5000/api/upload', formData, {
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/upload`, formData, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
