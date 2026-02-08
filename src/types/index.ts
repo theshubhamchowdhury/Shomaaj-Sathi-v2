@@ -30,6 +30,7 @@ export interface Complaint {
   category: ComplaintCategory;
   otherDescription?: string;
   imageUrl: string;
+  imageUrls?: string[];
   solutionImageUrl?: string;
   latitude: number;
   longitude: number;

@@ -25,7 +25,7 @@ export default function RegisterComplaint() {
   const { addComplaint } = useComplaints();
   const { latitude, longitude, address, loading: locationLoading, error: locationError, getLocation } = useGeolocation();
 
-  const [image, setImage] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [category, setCategory] = useState<ComplaintCategory | null>(null);
   const [otherDescription, setOtherDescription] = useState('');
   const [wardNumber, setWardNumber] = useState<string>(user?.wardNumber?.toString() || '');
@@ -39,8 +39,8 @@ export default function RegisterComplaint() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!image) {
-      toast.error('Please upload an image of the problem');
+    if (images.length === 0) {
+      toast.error('Please upload at least one image of the problem');
       return;
     }
 
@@ -66,7 +66,8 @@ export default function RegisterComplaint() {
         userId: user?.id || '',
         category,
         otherDescription: category === 'other' ? otherDescription : undefined,
-        imageUrl: image,
+        imageUrl: images[0],
+        imageUrls: images,
         latitude,
         longitude,
         address: address || 'Location captured',
@@ -126,7 +127,7 @@ export default function RegisterComplaint() {
         <form onSubmit={handleSubmit} className="space-y-6 bg-card rounded-2xl p-5 shadow-lg border border-border animate-fade-in">
           {/* Progress Steps */}
           <div className="flex items-center justify-center gap-2 mb-2">
-            <div className={`w-3 h-3 rounded-full ${image ? 'bg-primary' : 'bg-muted'} transition-colors`} />
+            <div className={`w-3 h-3 rounded-full ${images.length > 0 ? 'bg-primary' : 'bg-muted'} transition-colors`} />
             <div className={`w-8 h-0.5 ${address ? 'bg-primary' : 'bg-muted'} transition-colors`} />
             <div className={`w-3 h-3 rounded-full ${address ? 'bg-primary' : 'bg-muted'} transition-colors`} />
             <div className={`w-8 h-0.5 ${wardNumber ? 'bg-primary' : 'bg-muted'} transition-colors`} />
@@ -138,11 +139,11 @@ export default function RegisterComplaint() {
           {/* Image Upload */}
           <div className="space-y-3">
             <Label className="text-base font-bold flex items-center gap-2">
-              📸 Photo of Problem
+              📸 Photos of Problem
               <span className="text-destructive">*</span>
             </Label>
-            <ImageUpload value={image} onChange={setImage} token={token || undefined} />
-            <p className="text-xs text-muted-foreground">Take a clear photo showing the problem</p>
+            <ImageUpload value={images} onChange={setImages} token={token || undefined} maxImages={4} />
+            <p className="text-xs text-muted-foreground">Upload up to 4 clear photos showing the problem</p>
           </div>
 
           {/* Location */}

@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { MapPin, Clock, CheckCircle2, FileText, Filter, Calendar, ImageIcon } from 'lucide-react';
+import { MapPin, Clock, CheckCircle2, FileText, Filter, Calendar, ImageIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -30,7 +30,7 @@ export default function MyComplaints() {
     ? COMPLAINT_CATEGORIES.find((c) => c.value === selectedComplaint.category)
     : null;
 
-  const filters: { value: ComplaintStatus | 'all'; label: string; icon?: any; count: number }[] = [
+  const filters: { value: ComplaintStatus | 'all'; label: string; count: number }[] = [
     { value: 'all', label: 'All', count: complaints.length },
     { value: 'pending', label: 'Pending', count: complaints.filter(c => c.status === 'pending').length },
     { value: 'in-progress', label: 'In Progress', count: complaints.filter(c => c.status === 'in-progress').length },
@@ -39,27 +39,44 @@ export default function MyComplaints() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
-      {/* Page Title */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4">
-        <h1 className="text-xl font-bold text-gray-900 max-w-lg mx-auto">My Complaints</h1>
+      {/* Eye-catching Banner */}
+      <div className="bg-gradient-to-r from-primary via-blue-600 to-primary px-4 py-6 shadow-xl relative overflow-hidden">
+        {/* Decorative circles */}
+        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -left-4 -bottom-4 w-24 h-24 rounded-full bg-white/10" />
+        
+        <div className="max-w-lg mx-auto relative z-10">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-white shadow-lg flex items-center justify-center">
+              <FileText className="w-8 h-8 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-white tracking-tight">Track Your Complaints</h1>
+              <p className="text-white/90 text-sm mt-1">Monitor the progress of all your submitted issues</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <main className="px-4 py-6 space-y-4 max-w-lg mx-auto pb-8">
-        {/* Stats Summary */}
-        <div className="bg-card rounded-2xl p-4 shadow-sm border border-border animate-fade-in">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-              <FileText className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-bold text-foreground">Total Complaints</h3>
-              <p className="text-sm text-muted-foreground">{complaints.length} registered</p>
-            </div>
+      <main className="px-4 py-6 space-y-5 max-w-lg mx-auto pb-8">
+        {/* Stats Summary - More Prominent */}
+        <div className="grid grid-cols-3 gap-3 animate-fade-in">
+          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 text-center border border-amber-200">
+            <div className="text-2xl font-bold text-amber-700">{complaints.filter(c => c.status === 'pending').length}</div>
+            <div className="text-xs font-semibold text-amber-600 mt-1">Pending</div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center border border-blue-200">
+            <div className="text-2xl font-bold text-blue-700">{complaints.filter(c => c.status === 'in-progress').length}</div>
+            <div className="text-xs font-semibold text-blue-600 mt-1">In Progress</div>
+          </div>
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center border border-green-200">
+            <div className="text-2xl font-bold text-green-700">{complaints.filter(c => c.status === 'solved').length}</div>
+            <div className="text-xs font-semibold text-green-600 mt-1">Solved</div>
           </div>
         </div>
 
         {/* Filter Pills */}
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide animate-fade-in">
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide animate-fade-in" style={{ animationDelay: '0.1s' }}>
           {filters.map((f) => (
             <button
               key={f.value}
@@ -67,16 +84,16 @@ export default function MyComplaints() {
               className={cn(
                 'flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300',
                 filter === f.value
-                  ? 'bg-primary text-white shadow-md scale-105'
-                  : 'bg-card border border-border text-foreground hover:bg-secondary'
+                  ? 'bg-primary text-white shadow-lg scale-105'
+                  : 'bg-card border border-border text-foreground hover:bg-secondary hover:scale-105'
               )}
             >
               {f.label}
               <span className={cn(
-                'px-2 py-0.5 rounded-full text-xs',
+                'px-2 py-0.5 rounded-full text-xs font-bold',
                 filter === f.value
-                  ? 'bg-white/20'
-                  : 'bg-muted'
+                  ? 'bg-white/30 text-white'
+                  : 'bg-muted text-foreground'
               )}>
                 {f.count}
               </span>
@@ -86,7 +103,7 @@ export default function MyComplaints() {
 
         {/* Complaints List */}
         {filteredComplaints.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {filteredComplaints.map((complaint, index) => (
               <div 
                 key={complaint.id}
@@ -135,19 +152,35 @@ export default function MyComplaints() {
               </DialogHeader>
 
               <div className="space-y-4 mt-4">
-                {/* Problem Image */}
-                <div className="rounded-xl overflow-hidden shadow-md">
-                  <div className="relative">
-                    <img
-                      src={selectedComplaint.imageUrl}
-                      alt="Problem"
-                      className="w-full aspect-video object-cover"
-                    />
-                    <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm text-white px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
-                      <ImageIcon className="w-3 h-3" />
-                      Problem Photo
+                {/* Problem Images */}
+                <div className="space-y-2">
+                  <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                    <ImageIcon className="w-4 h-4" />
+                    Problem Photos
+                  </span>
+                  {selectedComplaint.imageUrls && selectedComplaint.imageUrls.length > 1 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedComplaint.imageUrls.map((imgUrl, index) => (
+                        <div key={index} className="rounded-xl overflow-hidden shadow-md">
+                          <img
+                            src={imgUrl}
+                            alt={`Problem ${index + 1}`}
+                            className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => window.open(imgUrl, '_blank')}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  ) : (
+                    <div className="rounded-xl overflow-hidden shadow-md">
+                      <img
+                        src={selectedComplaint.imageUrl}
+                        alt="Problem"
+                        className="w-full aspect-video object-cover cursor-pointer"
+                        onClick={() => window.open(selectedComplaint.imageUrl, '_blank')}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Status Badge */}

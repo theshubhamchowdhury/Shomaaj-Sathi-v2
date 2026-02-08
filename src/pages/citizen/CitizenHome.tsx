@@ -2,7 +2,7 @@ import { StatsCard } from '@/components/citizen/StatsCard';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useComplaints } from '@/contexts/ComplaintsContext';
-import { PlusCircle, ArrowRight, MapPin, Phone, Sparkles, Clock, CheckCircle2 } from 'lucide-react';
+import { PlusCircle, ArrowRight, MapPin, Phone, Sparkles, Clock, CheckCircle2, Award, User, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { COMPLAINT_CATEGORIES } from '@/types';
 import { format } from 'date-fns';
@@ -14,6 +14,31 @@ export default function CitizenHome() {
 
   const stats = user ? getStats(user.id) : { total: 0, pending: 0, inProgress: 0, solved: 0 };
   const recentComplaints = user ? getComplaintsByUser(user.id).slice(0, 3) : [];
+
+  // Mock data for Citizen Appreciation (would come from admin in real app)
+  const appreciatedCitizens = [
+    {
+      id: 1,
+      name: 'Rajesh Kumar',
+      image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&h=600&fit=crop',
+      contribution: 'Reported 15+ civic issues and helped keep Ward 5 clean through consistent monitoring',
+      date: new Date('2024-01-15'),
+    },
+    {
+      id: 2,
+      name: 'Priya Sharma',
+      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=600&fit=crop',
+      contribution: 'Actively participated in cleanliness drive and tree plantation initiatives',
+      date: new Date('2024-01-20'),
+    },
+    {
+      id: 3,
+      name: 'Amit Das',
+      image: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=800&h=600&fit=crop',
+      contribution: 'Helped resolve drainage issues in Ward 8 and organized community cleanup',
+      date: new Date('2024-02-01'),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
@@ -57,18 +82,33 @@ export default function CitizenHome() {
 
         {/* Stats Grid */}
         <section className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-foreground">Your Complaints</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/citizen/complaints')}
-              className="text-primary hover:text-primary/80 gap-1 font-medium"
-            >
-              View All
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+          {/* Eye-Catching Header */}
+          <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl p-4 mb-4 shadow-xl relative overflow-hidden">
+            {/* Decorative elements */}
+            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/20" />
+            <div className="absolute -left-4 -bottom-4 w-16 h-16 rounded-full bg-white/10" />
+            
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center animate-pulse">
+                  <span className="text-2xl">📋</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">Your Complaints</h2>
+                  <p className="text-white/90 text-sm">Track your submitted issues</p>
+                </div>
+              </div>
+              <Button
+                onClick={() => navigate('/citizen/complaints')}
+                className="bg-white text-orange-600 hover:bg-white/90 font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 rounded-xl"
+                size="sm"
+              >
+                View All
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           </div>
+          
           <div className="grid grid-cols-2 gap-3">
             <StatsCard label="Total" value={stats.total} variant="total" />
             <StatsCard label="Solved" value={stats.solved} variant="solved" />
@@ -152,8 +192,102 @@ export default function CitizenHome() {
           )}
         </section>
 
+        {/* Citizen Appreciation Section */}
+        <section className="bg-gradient-to-br from-amber-50 to-orange-50 -mx-4 px-4 py-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+          <div className="max-w-lg mx-auto">
+            {/* Section Header */}
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-8 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center">
+                  <Award className="w-5 h-5 text-amber-600" />
+                </div>
+                <h2 className="text-lg font-bold text-foreground">Citizen Appreciation</h2>
+              </div>
+              <p className="text-sm text-muted-foreground ml-10">
+                Recognizing outstanding citizens who contribute to making our city better
+              </p>
+            </div>
+            
+            {/* Cards Container */}
+            <div className="flex flex-col gap-4 mt-5">
+              {appreciatedCitizens.map((citizen) => (
+                <div
+                  key={citizen.id}
+                  className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all"
+                >
+                  {/* Image with Badge */}
+                  <div className="relative w-full h-48 bg-muted">
+                    <img
+                      src={citizen.image}
+                      alt={citizen.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Appreciated Badge */}
+                    <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-md">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base">⭐</span>
+                        <span className="text-xs font-semibold text-amber-600">Appreciated</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="p-4">
+                    <h3 className="font-bold text-base text-foreground mb-2">{citizen.name}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                      {citizen.contribution}
+                    </p>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{format(citizen.date, 'dd MMM yyyy')}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Leadership Section */}
+        <section className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
+          <div className="max-w-lg mx-auto">
+            {/* Section Header - Centered */}
+            <h2 className="text-xl font-bold text-foreground text-center mb-5">Our Leadership</h2>
+            
+            {/* Leader Card */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all">
+              {/* Large Leader Photo */}
+              <div className="relative w-full h-72 bg-gradient-to-br from-blue-100 to-indigo-100">
+                <img
+                  src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&h=800&fit=crop"
+                  alt="Hon. Ramesh Verma"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              {/* Content Below Image */}
+              <div className="p-5">
+                {/* Role - Small Uppercase */}
+                <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
+                  Member of Legislative Assembly (MLA)
+                </p>
+                
+                {/* Name - Bold */}
+                <h3 className="text-xl font-bold text-foreground mb-3">Hon. Ramesh Verma</h3>
+                
+                {/* Bio Paragraph */}
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  With over 15 years of dedicated public service, Hon. Ramesh Verma has been instrumental 
+                  in bringing transformative development to Halisahar. His vision focuses on infrastructure 
+                  modernization, improved civic amenities, and ensuring dignified quality of life for every citizen.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Help Section */}
-        <section className="bg-gradient-to-br from-secondary to-secondary/50 rounded-2xl p-5 border border-border/50 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+        <section className="bg-gradient-to-br from-secondary to-secondary/50 rounded-2xl p-5 border border-border/50 animate-slide-up" style={{ animationDelay: '0.5s' }}>
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
               <Phone className="w-5 h-5 text-primary" />

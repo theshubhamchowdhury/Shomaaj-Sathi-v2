@@ -308,11 +308,18 @@ export default function AdminDashboard() {
                       return (
                         <tr key={complaint.id} className="border-t border-border hover:bg-muted/30">
                           <td className="p-4">
-                            <img
-                              src={complaint.imageUrl}
-                              alt="Problem"
-                              className="w-16 h-12 object-cover rounded-lg"
-                            />
+                            <div className="relative">
+                              <img
+                                src={complaint.imageUrl}
+                                alt="Problem"
+                                className="w-16 h-12 object-cover rounded-lg"
+                              />
+                              {complaint.imageUrls && complaint.imageUrls.length > 1 && (
+                                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                                  {complaint.imageUrls.length}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="p-4">
                             <span className="category-badge">
@@ -464,14 +471,34 @@ export default function AdminDashboard() {
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Left Column - Info */}
                 <div className="space-y-4">
-                  <div className="rounded-xl overflow-hidden bg-muted">
-                    <img
-                      src={selectedComplaint.imageUrl}
-                      alt="Problem"
-                      className="w-full object-contain max-h-[400px] cursor-pointer"
-                      onClick={() => window.open(selectedComplaint.imageUrl, '_blank')}
-                      title="Click to view full image"
-                    />
+                  {/* Problem Images Gallery */}
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground">Problem Photos</span>
+                    {selectedComplaint.imageUrls && selectedComplaint.imageUrls.length > 1 ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        {selectedComplaint.imageUrls.map((imgUrl, index) => (
+                          <div key={index} className="rounded-xl overflow-hidden bg-muted">
+                            <img
+                              src={imgUrl}
+                              alt={`Problem ${index + 1}`}
+                              className="w-full h-32 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => window.open(imgUrl, '_blank')}
+                              title="Click to view full image"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl overflow-hidden bg-muted">
+                        <img
+                          src={selectedComplaint.imageUrl}
+                          alt="Problem"
+                          className="w-full object-contain max-h-[400px] cursor-pointer"
+                          onClick={() => window.open(selectedComplaint.imageUrl, '_blank')}
+                          title="Click to view full image"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-3">
