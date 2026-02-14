@@ -17,7 +17,7 @@ export function Header() {
   const notificationRef = useRef(null);
 
   // Example Admin Notifications (connected to DB)
- const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
 
   // Close dropdown when clicking outside
@@ -46,35 +46,35 @@ export function Header() {
 
   // PASTE THIS NEW useEffect BELOW
 
-useEffect(() => {
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem("token");
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-      const userRes = await axios.get(
-        `${API_URL}/api/user/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        const userRes = await axios.get(
+          `${API_URL}/api/user/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      const wardNumber = userRes.data.wardNumber;
+        const wardNumber = userRes.data.wardNumber;
 
-      const alertRes = await axios.get(
-        `${API_URL}/api/alerts/${wardNumber}`
-      );
+        const alertRes = await axios.get(
+          `${API_URL}/api/alerts/${wardNumber}`
+        );
 
-      setNotifications(alertRes.data);
+        setNotifications(alertRes.data);
 
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    }
-  };
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
 
-  fetchNotifications();
-}, []);
+    fetchNotifications();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -130,8 +130,25 @@ useEffect(() => {
 
             {/* Notification Panel */}
             {isNotificationOpen && (
-              <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 animate-fade-in">
-                
+   <div className="
+  fixed sm:absolute
+  right-3 sm:right-0
+  top-16 sm:top-full
+  mt-0 sm:mt-2
+  w-[92vw] sm:w-80
+  max-w-sm
+  bg-white
+  rounded-xl
+  shadow-lg
+  border
+  border-gray-100
+  animate-fade-in
+  z-[9999]
+">
+
+
+
+
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                   <h3 className="text-sm font-semibold text-gray-800">
