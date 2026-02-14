@@ -100,9 +100,10 @@ app.post('/api/auth/google', async (req, res) => {
 
     let user = await User.findOne({ googleId });
 // List of admin emails
+// List of admin emails
 const adminEmails = [
   'theshubhamchowdhury01@gmail.com',
-  'jyotishyadavcse@gmail.com'  
+  'jyotishyadavcse@gmail.com'  // second email here
 ];
 
 if (!user) {
