@@ -8,6 +8,8 @@ const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const User = require('./models/User');
 const Complaint = require('./models/Complaint');
+const Alert = require('./models/Alert');
+
 
 const app = express();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -100,7 +102,7 @@ app.post('/api/auth/google', async (req, res) => {
 
     if (!user) {
       // Auto-assign admin role for specific email
-      const isAdmin = email === 'jyotishyadavcse@gmail.com';
+      const isAdmin = email === 'theshubhamchowdhury01@gmail.com';
       user = new User({
         googleId,
         email,
@@ -108,13 +110,13 @@ app.post('/api/auth/google', async (req, res) => {
         photo: picture,
         role: isAdmin ? 'admin' : 'citizen',
         isVerified: isAdmin, // Admin is auto-verified
-        isProfileComplete: isAdmin, // Admin doesn't need profile setup
+        isProfileComplete: isAdmin, // Admin doesn't need profile setupsa
       });
       await user.save();
       console.log('Created new user:', email, isAdmin ? '(ADMIN)' : '');
     } else {
       // Upgrade existing user to admin if they have the admin email
-      if (email === 'jyotishyadavcse@gmail.com' && user.role !== 'admin') {
+      if (email === 'theshubhamchowdhury01@gmail.com' && user.role !== 'admin') {
         user.role = 'admin';
         user.isVerified = true;
         user.isProfileComplete = true;
@@ -226,6 +228,114 @@ app.get('/api/complaints/me', authenticateToken, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// ================= SEND PUBLIC ALERT =================
+app.post('/api/admin/send-alert', authenticateToken, async (req, res) => {
+  try {
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    const { title, message, ward, date, time } = req.body;
+
+    if (!title || !message || !date || !time) {
+      return res.status(400).json({ message: 'All required fields missing' });
+    }
+
+    const alert = await Alert.create({
+      title,
+      message,
+      ward,
+      date,
+      time,
+    });
+
+    res.status(201).json({
+      message: 'Alert sent successfully',
+      alert,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ================= GET ALERTS FOR USERS =================
+app.get('/api/alerts/:ward', async (req, res) => {
+  try {
+    const ward = req.params.ward;
+
+    const alerts = await Alert.find({
+      $or: [{ ward: 'all' }, { ward: ward }]
+    }).sort({ createdAt: -1 });
+
+    res.json(alerts);
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+// ================= ADMIN: GET ALL ALERTS =================
+app.get('/api/admin/alerts', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    const alerts = await Alert.find().sort({ createdAt: -1 });
+
+    res.json(alerts);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+// ================= ADMIN: DELETE ALERT =================
+app.delete('/api/admin/alerts/:id', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    await Alert.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Alert removed successfully' });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ================= ADMIN: DELETE USER =================
+app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
+  try {
+    console.log("DELETE request for ID:", req.params.id);
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      console.log("User not found in DB");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'User removed successfully' });
+
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 
 // Admin: Get All Complaints
 app.get('/api/admin/complaints', authenticateToken, async (req, res) => {

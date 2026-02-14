@@ -26,7 +26,7 @@ function LoadingScreen() {
           <div className="absolute inset-0 w-32 h-32 rounded-full border-2 border-white/20 animate-spin" style={{ animationDuration: '8s' }} />
           
           {/* Logo container */}
-          <div className="w-32 h-32 rounded-full bg-white shadow-2xl flex items-center justify-center animate-pulse" style={{ animationDuration: '2s' }}>
+          <div className="w-25 h-25 rounded-full bg-white shadow-2xl flex items-center justify-center animate-pulse" style={{ animationDuration: '2s' }}>
             <img 
               src="/municipal-logo.png" 
               alt="Municipal Corporation" 
@@ -42,7 +42,7 @@ function LoadingScreen() {
 
         {/* Text */}
         <div className="mt-8 text-center">
-          <h1 className="text-2xl font-bold text-white tracking-tight">Municipal Corporation</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Shomaaj</h1>
           <p className="text-white/70 mt-1 text-sm">Halisahar</p>
         </div>
 
@@ -135,7 +135,7 @@ export default function Login() {
               }}
             />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Halisahar Civic Portal</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Shomaaj Sathi</h1>
           <p className="text-primary-foreground/80 mt-2 text-lg">Report and track local problems</p>
         </div>
       </div>
@@ -205,7 +205,7 @@ export default function Login() {
             <Users className="w-4 h-4 text-primary" />
             <div className="text-sm">
               <span className="text-muted-foreground">An initiative by </span>
-              <span className="font-semibold text-foreground">MLA Office, Halisahar</span>
+              <span className="font-semibold text-foreground">Our Goverment</span>
             </div>
           </div>
         </div>

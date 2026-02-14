@@ -4,6 +4,8 @@ import { useComplaints } from '@/contexts/ComplaintsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ComplaintStatus, COMPLAINT_CATEGORIES, WARD_NUMBERS, Complaint, User } from '@/types';
 import axios from 'axios';
+import { Menu } from "lucide-react";
+
 import {
   Users,
   LayoutDashboard,
@@ -45,16 +47,30 @@ export default function AdminDashboard() {
   const { complaints, getStats, updateComplaintStatus } = useComplaints();
   const { logout, token } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'users'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'alerts'>('dashboard');
+
   const [unverifiedUsers, setUnverifiedUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
+
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [filterWard, setFilterWard] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  
+
+
+  // Alert form state
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertDate, setAlertDate] = useState('');
+  const [alertTime, setAlertTime] = useState('');
+  const [alertWard, setAlertWard] = useState<string>('all');
+  const [sendingAlert, setSendingAlert] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+
+
 
   // Update form state
   const [newStatus, setNewStatus] = useState<ComplaintStatus>('pending');
@@ -71,14 +87,14 @@ export default function AdminDashboard() {
     try {
       const formData = new FormData();
       formData.append('image', file);
-      
+
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/upload`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
-      
+
       setSolutionImage(response.data.url);
     } catch (error) {
       console.error('Upload failed:', error);
@@ -88,6 +104,90 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSendAlert = async () => {
+    if (!alertTitle || !alertMessage || !alertDate || !alertTime) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.post(
+        "http://localhost:5000/api/admin/send-alert",
+        {
+          title: alertTitle,
+          message: alertMessage,
+          ward: alertWard,
+          date: alertDate,
+          time: alertTime,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      alert(response.data.message);
+
+      // reset form
+      setAlertTitle("");
+      setAlertMessage("");
+      setAlertDate("");
+      setAlertTime("");
+      setAlertWard("all");
+
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Failed to send alert");
+    }
+  };
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  const fetchAlerts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(
+        "http://localhost:5000/api/admin/alerts",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setAlerts(res.data);
+
+    } catch (error) {
+      console.error("Error fetching alerts:", error);
+    }
+  };
+
+  const handleDeleteAlert = async (id: string) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(
+        `http://localhost:5000/api/admin/alerts/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      alert("Alert removed successfully");
+
+      fetchAlerts(); // refresh list
+
+    } catch (error) {
+      console.error("Error deleting alert:", error);
+    }
+  };
   const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
@@ -118,6 +218,37 @@ export default function AdminDashboard() {
       console.error(error);
     }
   };
+
+
+  const handleDeleteUser = async (userId: string) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to remove this user?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(
+        `http://localhost:5000/api/admin/users/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      alert("User removed successfully");
+
+      fetchUsers(); // reload users
+
+    } catch (error) {
+      console.error("Error removing user:", error);
+      alert("Failed to remove user");
+    }
+  };
+
 
   const stats = getStats();
 
@@ -158,58 +289,114 @@ export default function AdminDashboard() {
     ? COMPLAINT_CATEGORIES.find((c) => c.value === selectedComplaint.category)
     : null;
 
+
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-card border-r border-border hidden lg:block">
-        <div className="p-6">
-          <h1 className="text-xl font-bold text-primary">Admin Panel</h1>
-          <p className="text-sm text-muted-foreground">Halisahar Civic Portal</p>
-        </div>
+<aside
+  className={`fixed left-0 top-0 h-full w-64 bg-card border-r border-border 
+  transform transition-transform duration-300 z-50
+  ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+  lg:translate-x-0`}
+>
+  <div className="p-6">
+    <h1 className="text-xl font-bold text-primary">Admin Panel</h1>
+    <p className="text-sm text-muted-foreground">Halisahar Civic Portal</p>
+  </div>
 
-        <nav className="px-3 space-y-1">
-          <Button 
-            variant={activeTab === 'dashboard' ? 'secondary' : 'ghost'} 
-            className="w-full justify-start gap-3"
-            onClick={() => setActiveTab('dashboard')}
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            Dashboard
-          </Button>
-          <Button 
-            variant={activeTab === 'users' ? 'secondary' : 'ghost'} 
-            className="w-full justify-start gap-3"
-            onClick={() => setActiveTab('users')}
-          >
-            <Users className="w-5 h-5" />
-            User Verification
-          </Button>
-        </nav>
+  <nav className="px-3 space-y-1">
+    <Button
+      variant={activeTab === "dashboard" ? "secondary" : "ghost"}
+      className="w-full justify-start gap-3"
+      onClick={() => {
+        setActiveTab("dashboard");
+        setIsSidebarOpen(false);
+      }}
+    >
+      <LayoutDashboard className="w-5 h-5" />
+      Dashboard
+    </Button>
 
-        <div className="absolute bottom-6 left-3 right-3">
-          <Button variant="outline" className="w-full gap-2" onClick={handleLogout}>
-            <LogOut className="w-4 h-4" />
-            Logout
-          </Button>
-        </div>
-      </aside>
+    <Button
+      variant={activeTab === "users" ? "secondary" : "ghost"}
+      className="w-full justify-start gap-3"
+      onClick={() => {
+        setActiveTab("users");
+        setIsSidebarOpen(false);
+      }}
+    >
+      <Users className="w-5 h-5" />
+      User Verification
+    </Button>
+
+    <Button
+      variant={activeTab === "alerts" ? "secondary" : "ghost"}
+      className="w-full justify-start gap-3"
+      onClick={() => {
+        setActiveTab("alerts");
+        setIsSidebarOpen(false);
+      }}
+    >
+      <ShieldCheck className="w-5 h-5" />
+      Send Public Alert
+    </Button>
+  </nav>
+
+  <div className="absolute bottom-6 left-3 right-3">
+    <Button variant="outline" className="w-full gap-2" onClick={handleLogout}>
+      <LogOut className="w-4 h-4" />
+      Logout
+    </Button>
+  </div>
+</aside>
+
 
       {/* Main Content */}
       <main className="lg:ml-64 p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold">{activeTab === 'dashboard' ? 'Admin Dashboard' : 'User Verification'}</h1>
-            <p className="text-muted-foreground">
-              {activeTab === 'dashboard' ? 'Manage civic complaints' : 'Verify citizen registrations'}
-            </p>
-          </div>
-          <Button variant="outline" className="lg:hidden" onClick={handleLogout}>
-            <LogOut className="w-4 h-4" />
-          </Button>
-        </div>
+{/* Overlay for Mobile */}
+{isSidebarOpen && (
+  <div
+    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+    onClick={() => setIsSidebarOpen(false)}
+  />
+)}
 
-        {activeTab === 'dashboard' ? (
+
+        {/* Header */}
+<div className="flex items-center justify-between mb-8">
+  <div className="flex items-center gap-4">
+    {/* Mobile Menu Button */}
+    <button
+      className="lg:hidden"
+      onClick={() => setIsSidebarOpen(true)}
+    >
+      <Menu className="w-6 h-6" />
+    </button>
+
+    <div>
+      <h1 className="text-2xl font-bold">
+        {activeTab === "dashboard" && "Admin Dashboard"}
+        {activeTab === "users" && "User Verification"}
+        {activeTab === "alerts" && "Send Public Alert"}
+      </h1>
+      <p className="text-muted-foreground">
+        {activeTab === "dashboard" && "Manage civic complaints"}
+        {activeTab === "users" && "Verify citizen registrations"}
+        {activeTab === "alerts" && "Send alerts to citizens"}
+      </p>
+    </div>
+  </div>
+
+  <Button variant="outline" className="lg:hidden" onClick={handleLogout}>
+    <LogOut className="w-4 h-4" />
+  </Button>
+</div>
+
+        {/* DASHBOARD TAB */}
+        {activeTab === 'dashboard' && (
           <>
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -377,7 +564,10 @@ export default function AdminDashboard() {
               )}
             </div>
           </>
-        ) : (
+        )}
+
+        {/* USERS TAB */}
+        {activeTab === 'users' && (
           <div className="space-y-6">
             <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
               <div className="overflow-x-auto">
@@ -409,9 +599,9 @@ export default function AdminDashboard() {
                         <tr key={u.id} className="border-t border-border hover:bg-muted/30">
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <img 
-                                src={u.photo} 
-                                className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 ring-primary" 
+                              <img
+                                src={u.photo}
+                                className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 ring-primary"
                                 onClick={() => setSelectedUser(u)}
                               />
                               <div>
@@ -438,13 +628,23 @@ export default function AdminDashboard() {
                               </span>
                             )}
                           </td>
-                          <td className="p-4">
+                          <td className="p-4 space-x-2">
                             {!u.isVerified && (
                               <Button size="sm" onClick={() => verifyUser(u.id)}>
                                 <UserCheck className="w-4 h-4 mr-1" /> Verify
                               </Button>
                             )}
+
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteUser(u.id)}
+                            >
+                              Remove
+                            </Button>
                           </td>
+
+
                         </tr>
                       ))
                     )}
@@ -454,6 +654,131 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        {/* ALERTS TAB */}
+        {activeTab === 'alerts' && (
+          <div className="bg-card rounded-xl p-6 border border-border shadow-card max-w-4xl">
+            <div className="flex items-center gap-2 mb-6">
+              <ShieldCheck className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold">Send Public Alert</h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Left */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Alert Title *</label>
+                  <Input
+                    placeholder="e.g. Water Supply Maintenance"
+                    value={alertTitle}
+                    onChange={(e) => setAlertTitle(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Alert Message *</label>
+                  <Textarea
+                    placeholder="Write full message for citizens..."
+                    value={alertMessage}
+                    onChange={(e) => setAlertMessage(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Right */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Select Ward</label>
+                  <Select value={alertWard} onValueChange={setAlertWard}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Wards</SelectItem>
+                      {WARD_NUMBERS.map((num) => (
+                        <SelectItem key={num} value={num.toString()}>
+                          Ward {num}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Date *</label>
+                    <Input
+                      type="date"
+                      value={alertDate}
+                      onChange={(e) => setAlertDate(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Time *</label>
+                    <Input
+                      type="time"
+                      value={alertTime}
+                      onChange={(e) => setAlertTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleSendAlert}
+                  disabled={sendingAlert}
+                  className="w-full"
+                >
+                  {sendingAlert && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  Send Alert to Users
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= ALERT HISTORY ================= */}
+        {activeTab === 'alerts' && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold mb-4">
+              Alert History
+            </h2>
+
+            {alerts.length === 0 ? (
+              <p className="text-gray-500">No alerts sent yet.</p>
+            ) : (
+              alerts.map((alert: any) => (
+                <div
+                  key={alert._id}
+                  className="bg-white shadow-sm border border-gray-200 rounded-lg p-4 mb-3"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-gray-800">
+                        {alert.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {alert.message}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Ward: {alert.ward} | {alert.date} {alert.time}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => handleDeleteAlert(alert._id)}
+                      className="text-red-600 text-sm hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+
       </main>
 
       {/* Complaint Detail Dialog */}
@@ -533,9 +858,9 @@ export default function AdminDashboard() {
                           <CheckCircle2 className="w-4 h-4" /> Problem Resolved
                         </p>
                         <div className="rounded-lg overflow-hidden bg-white dark:bg-black/20">
-                          <img 
-                            src={selectedComplaint.solutionImageUrl} 
-                            alt="Solution" 
+                          <img
+                            src={selectedComplaint.solutionImageUrl}
+                            alt="Solution"
                             className="w-full object-contain max-h-[200px] cursor-pointer"
                             onClick={() => window.open(selectedComplaint.solutionImageUrl, '_blank')}
                           />
@@ -655,9 +980,9 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   <h3 className="font-semibold text-sm text-muted-foreground">Profile Photo</h3>
                   <div className="bg-muted rounded-xl p-2 flex justify-center">
-                    <img 
-                      src={selectedUser.photo} 
-                      alt="Profile" 
+                    <img
+                      src={selectedUser.photo}
+                      alt="Profile"
                       className="max-w-full max-h-[300px] object-contain rounded-lg cursor-pointer"
                       onClick={() => window.open(selectedUser.photo, '_blank')}
                     />
@@ -670,9 +995,9 @@ export default function AdminDashboard() {
                   <h3 className="font-semibold text-sm text-muted-foreground">Aadhar Card Photo</h3>
                   <div className="bg-muted rounded-xl p-2 flex justify-center">
                     {selectedUser.aadharPhoto ? (
-                      <img 
-                        src={selectedUser.aadharPhoto} 
-                        alt="Aadhar Card" 
+                      <img
+                        src={selectedUser.aadharPhoto}
+                        alt="Aadhar Card"
                         className="max-w-full max-h-[300px] object-contain rounded-lg cursor-pointer"
                         onClick={() => window.open(selectedUser.aadharPhoto, '_blank')}
                       />
@@ -707,14 +1032,16 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+
+
                 {/* Actions */}
                 <div className="flex gap-3">
                   {!selectedUser.isVerified && (
-                    <Button 
-                      className="flex-1" 
-                      onClick={() => { 
-                        verifyUser(selectedUser.id); 
-                        setSelectedUser(null); 
+                    <Button
+                      className="flex-1"
+                      onClick={() => {
+                        verifyUser(selectedUser.id);
+                        setSelectedUser(null);
                       }}
                     >
                       <UserCheck className="w-4 h-4 mr-2" /> Verify User
