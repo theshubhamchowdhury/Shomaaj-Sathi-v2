@@ -114,7 +114,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "http://localhost:5000/api/admin/send-alert",
+        "https://shomaaj-sathi.onrender.com/api/admin/send-alert",
         {
           title: alertTitle,
           message: alertMessage,
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       const res = await axios.get(
-        "http://localhost:5000/api/admin/alerts",
+        "https://shomaaj-sathi.onrender.com/api/admin/alerts",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -172,7 +172,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       await axios.delete(
-        `http://localhost:5000/api/admin/alerts/${id}`,
+        `https://shomaaj-sathi.onrender.com/api/admin/alerts/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       await axios.delete(
-        `http://localhost:5000/api/admin/users/${userId}`,
+        `https://shomaaj-sathi.onrender.com/api/admin/users/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
