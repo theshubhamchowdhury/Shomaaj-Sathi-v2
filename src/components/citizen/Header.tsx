@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { User, LogOut, Bell, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL || 'https://shomaaj-sathi.onrender.com';
 
 
 export function Header() {
@@ -51,7 +52,7 @@ useEffect(() => {
       const token = localStorage.getItem("token");
 
       const userRes = await axios.get(
-        "https://shomaaj-sathi.onrender.com/api/user/me",
+        `${API_URL}/api/user/me`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -62,7 +63,7 @@ useEffect(() => {
       const wardNumber = userRes.data.wardNumber;
 
       const alertRes = await axios.get(
-        `https://shomaaj-sathi.onrender.com/api/alerts/${wardNumber}`
+        `${API_URL}/api/alerts/${wardNumber}`
       );
 
       setNotifications(alertRes.data);

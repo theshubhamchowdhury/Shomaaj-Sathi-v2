@@ -4,6 +4,7 @@ import { useComplaints } from '@/contexts/ComplaintsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ComplaintStatus, COMPLAINT_CATEGORIES, WARD_NUMBERS, Complaint, User } from '@/types';
 import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL || 'https://shomaaj-sathi.onrender.com';
 import { Menu } from "lucide-react";
 
 import {
@@ -114,7 +115,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "https://shomaaj-sathi.onrender.com/api/admin/send-alert",
+        `${API_URL}/api/admin/send-alert`,
         {
           title: alertTitle,
           message: alertMessage,
@@ -152,7 +153,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       const res = await axios.get(
-        "https://shomaaj-sathi.onrender.com/api/admin/alerts",
+        `${API_URL}/api/admin/alerts`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -172,7 +173,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       await axios.delete(
-        `https://shomaaj-sathi.onrender.com/api/admin/alerts/${id}`,
+        `${API_URL}/api/admin/alerts/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -231,7 +232,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       await axios.delete(
-        `https://shomaaj-sathi.onrender.com/api/admin/users/${userId}`,
+        `${API_URL}/api/admin/users/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
