@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { User } from '@/types';
 import axios from 'axios';
 
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -9,6 +10,7 @@ interface AuthContextType {
   loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  updateUser: (data: Partial<User>) => void;   
   checkAuth: () => Promise<void>;
 }
 
@@ -68,15 +70,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   };
+  const updateUser = (data: Partial<User>) => {
+    setUser(prev => prev ? { ...prev, ...data } : prev);
+  };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated: !!user, 
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated: !!user,
       token,
-      loginWithGoogle, 
+      loginWithGoogle,
       logout,
       updateProfile,
+      updateUser,    
       checkAuth
     }}>
       {children}

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Shield, Loader2, AlertCircle, CheckCircle2, MapPin, FileText, Users } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+
 // Loading Screen Component
 function LoadingScreen() {
   return (
@@ -74,7 +75,9 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      if (!user.isProfileComplete) {
+      if (!user.language) {
+        navigate('/citizen/onboarding');
+      } else if (!user.isProfileComplete) {
         navigate('/citizen/profile-setup');
       } else if (!user.isVerified && user.role !== 'admin') {
         // User is logged in but not verified, show message

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ComplaintsProvider } from "@/contexts/ComplaintsContext";
+import Onboarding from "@/pages/citizen/Onboarding";
 
 // Layouts
 import CitizenLayout from "@/layouts/CitizenLayout";
@@ -22,34 +23,57 @@ const queryClient = new QueryClient();
 
 import ProfileSetup from "@/pages/citizen/ProfileSetup";
 
-function ProtectedRoute({ children, role }: { children: React.ReactNode; role?: 'citizen' | 'admin' }) {
+import { useLocation } from "react-router-dom";
+
+function ProtectedRoute({
+  children,
+  role,
+}: {
+  children: React.ReactNode;
+  role?: "citizen" | "admin";
+}) {
   const { isAuthenticated, user } = useAuth();
+  const location = useLocation();
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  // Admin doesn't need profile setup
-  if (user?.role === 'admin') {
-    if (role && role !== 'admin') {
+  // Admin handling
+  if (user?.role === "admin") {
+    if (role && role !== "admin") {
       return <Navigate to="/admin" replace />;
     }
     return <>{children}</>;
   }
 
-  // Allow access to profile-setup even if not verified
-  const isProfileSetupPage = window.location.pathname === '/citizen/profile-setup';
+  // Citizen onboarding check
+  if (user && !user.language && location.pathname !== "/citizen/onboarding") {
+    return <Navigate to="/citizen/onboarding" replace />;
+  }
 
-  if (user && !user.isProfileComplete && !isProfileSetupPage) {
+  // Profile setup check (but allow manual return to onboarding)
+  if (
+    user &&
+    user.language &&
+    !user.isProfileComplete &&
+    location.pathname !== "/citizen/profile-setup" &&
+    location.pathname !== "/citizen/onboarding"
+  ) {
     return <Navigate to="/citizen/profile-setup" replace />;
   }
 
-  // Don't block unverified users from profile-setup page
-  if (user && !user.isVerified && !isProfileSetupPage && window.location.pathname !== '/') {
+  // Verification check
+  if (
+    user &&
+    user.isProfileComplete &&
+    !user.isVerified &&
+    location.pathname !== "/"
+  ) {
     return <Navigate to="/" replace />;
   }
 
-  // At this point, user is a citizen (admins returned early above)
+  // Role protection
   if (role && user?.role !== role) {
     return <Navigate to="/citizen" replace />;
   }
@@ -59,33 +83,46 @@ function ProtectedRoute({ children, role }: { children: React.ReactNode; role?: 
 
 function AppRoutes() {
   const { isAuthenticated, user } = useAuth();
+  const language = user?.language ?? (typeof window !== 'undefined' ? localStorage.getItem('appLanguage') : null);
 
   return (
     <Routes>
       {/* Public */}
-      <Route 
-        path="/" 
+      <Route
+        path="/"
         element={
-          isAuthenticated 
+          isAuthenticated
             ? (user?.role === 'admin'
-                ? <Navigate to="/admin" replace />
+              ? <Navigate to="/admin" replace />
+              : !language
+                ? <Navigate to="/citizen/onboarding" replace />
                 : !user?.isProfileComplete
                   ? <Navigate to="/citizen/profile-setup" replace />
                   : user?.isVerified
                     ? <Navigate to="/citizen" replace />
                     : <Login />)
             : <Login />
-        } 
+        }
+      />
+
+      {/* Onboarding Route */}
+      <Route
+        path="/citizen/onboarding"
+        element={
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        }
       />
 
       {/* Citizen Profile Setup */}
-      <Route 
-        path="/citizen/profile-setup" 
+      <Route
+        path="/citizen/profile-setup"
         element={
           <ProtectedRoute>
             <ProfileSetup />
           </ProtectedRoute>
-        } 
+        }
       />
 
       {/* Citizen Routes */}

@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Camera, MapPin, User, Contact, Loader2, CheckCircle2 } from 'lucide-react';
+import { Camera, MapPin, User, Contact, Loader2, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { WARD_NUMBERS } from '@/types';
 import axios from 'axios';
 
@@ -23,9 +23,12 @@ export default function ProfileSetup() {
   const [loading, setLoading] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingAadhar, setUploadingAadhar] = useState(false);
-  
+
   const photoInputRef = useRef<HTMLInputElement>(null);
   const aadharInputRef = useRef<HTMLInputElement>(null);
+
+  const [photoError, setPhotoError] = useState(false);
+  const [aadharError, setAadharError] = useState(false);
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -50,7 +53,7 @@ export default function ProfileSetup() {
           'Content-Type': 'multipart/form-data'
         }
       });
-      
+
       if (type === 'photo') {
         setFormData(prev => ({ ...prev, photo: response.data.url }));
       } else {
@@ -81,37 +84,60 @@ export default function ProfileSetup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.photo || !formData.aadharPhoto) {
-      alert('Please upload both profile photo and Aadhar card photo');
-      return;
+
+    let hasError = false;
+
+    if (!formData.photo) {
+      setPhotoError(true);
+      hasError = true;
+    } else {
+      setPhotoError(false);
+    }
+
+    if (!formData.aadharPhoto) {
+      setAadharError(true);
+      hasError = true;
+    } else {
+      setAadharError(false);
     }
 
     if (!formData.wardNumber) {
-      alert('Please select your ward number');
-      return;
+      alert("Please select your ward number");
+      hasError = true;
     }
 
+    if (hasError) return;
+
     setLoading(true);
+
     try {
       await updateProfile({
         ...formData,
         wardNumber: parseInt(formData.wardNumber)
       });
-      navigate('/');
+      navigate("/");
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8">
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Complete Your Profile</h1>
-          <p className="text-muted-foreground">We need a few more details to verify your account</p>
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/citizen/onboarding')}
+            className="-ml-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="text-center flex-1">
+            <h1 className="text-3xl font-bold">Complete Your Profile</h1>
+            <p className="text-muted-foreground">We need a few more details to verify your account</p>
+          </div>
+          <div style={{ width: 40 }} />
         </div>
 
         <Card>
@@ -122,7 +148,9 @@ export default function ProfileSetup() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">
+                  Full Name <span className="text-red-500">*</span>
+                </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -137,24 +165,29 @@ export default function ProfileSetup() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mobile">Mobile Number</Label>
-                <div className="relative">
+                <Label>
+                  Mobile Number <span className="text-red-500">*</span>
+                </Label>
+
+                <div className="flex gap-2">
                   <Input
-                    id="mobile"
                     type="tel"
-                    className="pl-3"
                     placeholder="Enter your 10-digit mobile number"
                     value={formData.mobile}
                     onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                    pattern="[0-9]{10}"
                     maxLength={10}
                     required
                   />
+
                 </div>
+
               </div>
 
+
               <div className="space-y-2">
-                <Label htmlFor="address">Residential Address</Label>
+                <Label htmlFor="address">
+                  Residential Address <span className="text-red-500">*</span>
+                </Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Textarea
@@ -169,7 +202,9 @@ export default function ProfileSetup() {
               </div>
 
               <div className="space-y-2">
-                <Label>Ward Number</Label>
+                <Label>
+                  Ward Number <span className="text-red-500">*</span>
+                </Label>
                 <Select
                   value={formData.wardNumber}
                   onValueChange={(v) => setFormData({ ...formData, wardNumber: v })}
@@ -189,11 +224,16 @@ export default function ProfileSetup() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <Label>Profile Photo</Label>
-                  <div 
-                    className="border-2 border-dashed rounded-xl p-4 text-center space-y-2 hover:bg-muted/50 transition-colors cursor-pointer relative overflow-hidden"
+                  <Label>
+                    Profile Photo <span className="text-red-500">*</span>
+                  </Label>                  <div
+                    className={`border-2 border-dashed rounded-xl p-4 text-center space-y-2 transition-colors cursor-pointer relative overflow-hidden 
+                    ${photoError ? "border-red-500 bg-red-50" : "hover:bg-muted/50"}`}
                     onClick={() => photoInputRef.current?.click()}
                   >
+                    {photoError && (
+                      <p className="text-red-500 text-sm">Profile photo is required</p>
+                    )}
                     {formData.photo ? (
                       <div className="relative">
                         <img src={formData.photo} alt="Profile" className="w-full h-32 object-cover rounded-lg" />
@@ -207,22 +247,29 @@ export default function ProfileSetup() {
                         <p className="text-xs text-muted-foreground">Click to upload photo</p>
                       </>
                     )}
-                    <Input 
+                    <Input
                       ref={photoInputRef}
-                      type="file" 
+                      type="file"
                       accept="image/*"
-                      className="hidden" 
+                      className="hidden"
                       onChange={handlePhotoChange}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <Label>Aadhar Card Photo</Label>
-                  <div 
-                    className="border-2 border-dashed rounded-xl p-4 text-center space-y-2 hover:bg-muted/50 transition-colors cursor-pointer relative overflow-hidden"
+                  <Label>
+                    Aadhar Card Photo <span className="text-red-500">*</span>
+                  </Label>
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-4 text-center space-y-2 transition-colors cursor-pointer relative overflow-hidden 
+                     ${aadharError ? "border-red-500 bg-red-50" : "hover:bg-muted/50"}`}
                     onClick={() => aadharInputRef.current?.click()}
                   >
+
+                    {aadharError && (
+                      <p className="text-red-500 text-sm">Aadhar photo is required</p>
+                    )}
                     {formData.aadharPhoto ? (
                       <div className="relative">
                         <img src={formData.aadharPhoto} alt="Aadhar" className="w-full h-32 object-cover rounded-lg" />
@@ -236,20 +283,31 @@ export default function ProfileSetup() {
                         <p className="text-xs text-muted-foreground">Click to upload Aadhar Card</p>
                       </>
                     )}
-                    <Input 
+                    <Input
                       ref={aadharInputRef}
-                      type="file" 
+                      type="file"
                       accept="image/*"
-                      className="hidden" 
+                      className="hidden"
                       onChange={handleAadharChange}
                     />
                   </div>
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-12 text-lg" disabled={loading || uploadingPhoto || uploadingAadhar}>
+              <Button
+                type="submit"
+                disabled={
+                  loading ||
+                  uploadingPhoto ||
+                  uploadingAadhar ||
+                  !formData.photo ||
+                  !formData.aadharPhoto
+                }
+              >
+
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Submit for Verification"}
               </Button>
+
             </form>
           </CardContent>
         </Card>
